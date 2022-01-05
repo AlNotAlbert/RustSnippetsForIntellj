@@ -1,0 +1,249 @@
+<templateSet group="RustSnipps">
+  <template name="base64-encode" value="extern crate base64;&#10;&#10;use std::str;&#10;use base64::{encode, decode};&#10;&#10;fn run() -&gt; Result&lt;()&gt; {&#10;    let hello = b&quot;hello rustaceans&quot;;&#10;    let encoded = encode(hello);&#10;    let decoded = decode(&amp;encoded)?;&#10;&#10;    println!(&quot;origin: {}&quot;, str::from_utf8(hello)?);&#10;    println!(&quot;base64 encoded: {}&quot;, encoded);&#10;    println!(&quot;back to origin: {}&quot;, str::from_utf8(&amp;decoded)?);&#10;&#10;    Ok(())&#10;}" description="Encode and decode base64" toReformat="true" toShortenFQNames="true">
+    <context>
+      <option name="RUST_FILE" value="true" />
+    </context>
+  </template>
+  <template name="check-api-exists" value="extern crate reqwest;&#10;&#10;use std::time::Duration;&#10;use reqwest::Client;&#10;&#10;fn run() -&gt; Result&lt;()&gt; {&#10;    let request_url = &quot;https://api.github.com/users/ferris-the-crab&quot;;&#10;    println!(&quot;{}&quot;, request_url);&#10;&#10;    // The timeout for the request is set to 5 seconds.&#10;    let timeout = Duration::new(5, 0);&#10;&#10;    let mut client = Client::new()?;&#10;    client.timeout(timeout);&#10;    let response = client.head(request_url).send()?;&#10;&#10;    if response.status().is_success() {&#10;        println!(&quot;ferris-the-crab is a user!&quot;);&#10;    } else {&#10;        println!(&quot;ferris-the-crab is not a user!&quot;);&#10;    }&#10;&#10;    Ok(())&#10;}" description="Check if an API resource exists" toReformat="true" toShortenFQNames="true">
+    <context>
+      <option name="RUST_FILE" value="true" />
+    </context>
+  </template>
+  <template name="compress-tarball" value="extern crate tar;&#10;extern crate flate2;&#10;&#10;use std::fs::File;&#10;use flate2::Compression;&#10;use flate2::write::GzEncoder;&#10;&#10;fn run() -&gt; Result&lt;()&gt; {&#10;    let tar_gz = File::create(&quot;archive.tar.gz&quot;)?;&#10;    let enc = GzEncoder::new(tar_gz, Compression::Default);&#10;    let mut tar = tar::Builder::new(enc);&#10;    tar.append_dir_all(&quot;backup/logs&quot;, &quot;/var/log&quot;)?;&#10;    Ok(())&#10;}" description="Compress a directory into tarball" toReformat="true" toShortenFQNames="true">
+    <context>
+      <option name="RUST_FILE" value="true" />
+    </context>
+  </template>
+  <template name="create-baseurl" value="extern crate url;&#10;&#10;use url::Url;&#10;&#10;fn run() -&gt; Result&lt;()&gt; {&#10;    let full = &quot;https://github.com/rust-lang/cargo?asdf&quot;;&#10;&#10;    let url = Url::parse(full)?;&#10;    let base = base_url(url)?;&#10;&#10;    assert_eq!(base.as_str(), &quot;https://github.com/&quot;);&#10;    println!(&quot;The base of the URL is: {}&quot;, base);&#10;&#10;    Ok(())&#10;}&#10;&#10;/// Returns the base of the given URL - the part not including any path segments&#10;/// and query parameters.&#10;fn base_url(mut url: Url) -&gt; Result&lt;Url&gt; {&#10;    // Clear path segments.&#10;    match url.path_segments_mut() {&#10;        Ok(mut path) =&gt; {&#10;            path.clear();&#10;        }&#10;        Err(_) =&gt; {&#10;            // Certain URLs cannot be turned into a base URL.&#10;            return Err(Error::from_kind(ErrorKind::CannotBeABase));&#10;        }&#10;    }&#10;&#10;    // Clear query parameters.&#10;    url.set_query(None);&#10;&#10;    Ok(url)&#10;}" description="Create a base URL by removing path segments" toReformat="true" toShortenFQNames="true">
+    <context>
+      <option name="RUST_FILE" value="true" />
+    </context>
+  </template>
+  <template name="create-delete-gist" value="extern crate reqwest;&#10;#[macro_use]&#10;extern crate serde_derive;&#10;#[macro_use]&#10;extern crate serde_json;&#10;&#10;use std::env;&#10;&#10;#[derive(Deserialize, Debug)]&#10;struct Gist {&#10;    id: String,&#10;    html_url: String,&#10;    // remaining fields not deserialized for brevity&#10;}&#10;&#10;fn run() -&gt; Result&lt;()&gt; {&#10;    let gh_user = env::var(&quot;GH_USER&quot;)?;&#10;    let gh_pass = env::var(&quot;GH_PASS&quot;)?;&#10;&#10;    // The type `gist_body` is `serde_json::Value`&#10;    let gist_body = json!({&#10;        &quot;description&quot;: &quot;the description for this gist&quot;,&#10;        &quot;public&quot;: true,&#10;        &quot;files&quot;: {&#10;             &quot;main.rs&quot;: {&#10;             &quot;content&quot;: r#&quot;fn main() { println!(&quot;hello world!&quot;);}&quot;#&#10;            }&#10;        }});&#10;&#10;    // create the gist&#10;    let request_url = &quot;https://api.github.com/gists&quot;;&#10;    let client = reqwest::Client::new()?;&#10;    let mut response = client&#10;        .post(request_url)&#10;        .basic_auth(gh_user.clone(), Some(gh_pass.clone()))&#10;        .json(&amp;gist_body)&#10;        .send()?;&#10;&#10;    let gist: Gist = response.json()?;&#10;    println!(&quot;Created {:?}&quot;, gist);&#10;&#10;    // delete the gist&#10;    let request_url = format!(&quot;{}/{}&quot;,request_url, gist.id);&#10;    let client = reqwest::Client::new()?;&#10;    let response = client&#10;        .delete(&amp;request_url)&#10;        .basic_auth(gh_user, Some(gh_pass))&#10;        .send()?;&#10;&#10;    println!(&quot;Gist {} deleted! Status code: {}&quot;,gist.id, response.status());&#10;    Ok(())&#10;}" description="Create and delete Gist with GitHub API" toReformat="true" toShortenFQNames="true">
+    <context>
+      <option name="RUST_FILE" value="true" />
+    </context>
+  </template>
+  <template name="create-url" value="extern crate url;&#10;&#10;use url::Url;&#10;&#10;fn run() -&gt; Result&lt;()&gt; {&#10;    let path = &quot;/rust-lang/cargo&quot;;&#10;&#10;    let gh = build_github_url(path)?;&#10;&#10;    assert_eq!(gh.as_str(), &quot;https://github.com/rust-lang/cargo&quot;);&#10;    println!(&quot;The joined URL is: {}&quot;, gh);&#10;&#10;    Ok(())&#10;}&#10;&#10;fn build_github_url(path: &amp;str) -&gt; Result&lt;Url&gt; {&#10;    // Hardcoded in our program. Caller's path will be joined to this.&#10;    const GITHUB: &amp;'static str = &quot;https://github.com&quot;;&#10;&#10;    let base = Url::parse(GITHUB).expect(&quot;hardcoded URL is known to be valid&quot;);&#10;    let joined = base.join(path)?;&#10;&#10;    Ok(joined)&#10;}" description="Create new URLs from a base URL" toReformat="true" toShortenFQNames="true">
+    <context>
+      <option name="RUST_FILE" value="true" />
+    </context>
+  </template>
+  <template name="custom-logger" value="#[macro_use]&#10;extern crate log;&#10;&#10;use log::{LogRecord, LogLevel, LogMetadata, LogLevelFilter};&#10;&#10;struct ConsoleLogger;&#10;&#10;impl log::Log for ConsoleLogger {&#10;    fn enabled(&amp;self, metadata: &amp;LogMetadata) -&gt; bool {&#10;        metadata.level() &lt;= LogLevel::Info&#10;    }&#10;&#10;    fn log(&amp;self, record: &amp;LogRecord) {&#10;        if self.enabled(record.metadata()) {&#10;            println!(&quot;Rust says: {} - {}&quot;, record.level(), record.args());&#10;        }&#10;    }&#10;}&#10;&#10;fn run() -&gt; Result&lt;()&gt; {&#10;    log::set_logger(|max_log_level| {&#10;                        max_log_level.set(LogLevelFilter::Info);&#10;                        Box::new(ConsoleLogger)&#10;                    })?;&#10;&#10;    info!(&quot;hello log&quot;);&#10;    warn!(&quot;warning&quot;);&#10;    error!(&quot;oops&quot;);&#10;    Ok(())&#10;}" description="Log messages with a custom logger" toReformat="true" toShortenFQNames="true">
+    <context>
+      <option name="RUST_FILE" value="true" />
+    </context>
+  </template>
+  <template name="decompress-tarball" value="extern crate flate2;&#10;extern crate tar;&#10;&#10;use std::fs::File;&#10;use flate2::read::GzDecoder;&#10;use tar::Archive;&#10;&#10;fn run() -&gt; Result&lt;()&gt; {&#10;    let path = &quot;archive.tar.gz&quot;;&#10;&#10;    // Open a compressed tarball&#10;    let tar_gz = File::open(path)?;&#10;    // Decompress it&#10;    let tar = GzDecoder::new(tar_gz)?;&#10;    // Load the archive from the tarball&#10;    let mut archive = Archive::new(tar);&#10;    // Unpack the archive inside curent working directory&#10;    archive.unpack(&quot;.&quot;)?;&#10;&#10;    Ok(())&#10;}" description="Decompress a tarball" toReformat="true" toShortenFQNames="true">
+    <context>
+      <option name="RUST_FILE" value="true" />
+    </context>
+  </template>
+  <template name="deserialize-json" value="#[macro_use]&#10;extern crate serde_json;&#10;&#10;use serde_json::Value;&#10;&#10;fn run() -&gt; Result&lt;()&gt; {&#10;    let j = r#&quot;{&#10;                 &quot;userid&quot;: 103609,&#10;                 &quot;verified&quot;: true,&#10;                 &quot;access_privileges&quot;: [&#10;                   &quot;user&quot;,&#10;                   &quot;admin&quot;&#10;                 ]&#10;               }&quot;#;&#10;&#10;    let parsed: Value = serde_json::from_str(j)?;&#10;&#10;    let expected = json!({&#10;        &quot;userid&quot;: 103609,&#10;        &quot;verified&quot;: true,&#10;        &quot;access_privileges&quot;: [&#10;            &quot;user&quot;,&#10;            &quot;admin&quot;&#10;        ]&#10;    });&#10;&#10;    assert_eq!(parsed, expected);&#10;&#10;    Ok(())&#10;}" description="Serialize and deserialize unstructured JSON" toReformat="true" toShortenFQNames="true">
+    <context>
+      <option name="RUST_FILE" value="true" />
+    </context>
+  </template>
+  <template name="deserialize-toml-struct" value="#[macro_use]&#10;extern crate serde_derive;&#10;extern crate serde;&#10;extern crate toml;&#10;&#10;use std::collections::HashMap;&#10;&#10;#[derive(Deserialize)]&#10;struct Config {&#10;    package: Package,&#10;    dependencies: HashMap&lt;String, String&gt;,&#10;}&#10;&#10;#[derive(Deserialize)]&#10;struct Package {&#10;    name: String,&#10;    version: String,&#10;    authors: Vec&lt;String&gt;,&#10;}&#10;&#10;fn run() -&gt; Result&lt;()&gt; {&#10;    let toml_content = r#&quot;&#10;          [package]&#10;          name = &quot;your_package&quot;&#10;          version = &quot;0.1.0&quot;&#10;          authors = [&quot;You! &lt;you@example.org&gt;&quot;]&#10;&#10;          [dependencies]&#10;          serde = &quot;1.0&quot;&#10;          &quot;#;&#10;&#10;    let package_info: Config = toml::from_str(toml_content)?;&#10;&#10;    assert_eq!(package_info.package.name, &quot;your_package&quot;);&#10;    assert_eq!(package_info.package.version, &quot;0.1.0&quot;);&#10;    assert_eq!(package_info.package.authors, vec![&quot;You! &lt;you@example.org&gt;&quot;]);&#10;    assert_eq!(package_info.dependencies[&quot;serde&quot;], &quot;1.0&quot;);&#10;&#10;    Ok(())&#10;}" description="Deserialize a TOML configuration file into its own struct using serde" toReformat="true" toShortenFQNames="true">
+    <context>
+      <option name="RUST_FILE" value="true" />
+    </context>
+  </template>
+  <template name="deserialize-toml-value" value="extern crate toml;&#10;&#10;use toml::Value;&#10;&#10;fn run() -&gt; Result&lt;()&gt; {&#10;    let toml_content = r#&quot;&#10;          [package]&#10;          name = &quot;your_package&quot;&#10;          version = &quot;0.1.0&quot;&#10;          authors = [&quot;You! &lt;you@example.org&gt;&quot;]&#10;&#10;          [dependencies]&#10;          serde = &quot;1.0&quot;&#10;          &quot;#;&#10;&#10;    let package_info: Value = toml::from_str(toml_content)?;&#10;&#10;    assert_eq!(package_info[&quot;dependencies&quot;][&quot;serde&quot;].as_str(), Some(&quot;1.0&quot;));&#10;    assert_eq!(package_info[&quot;package&quot;][&quot;name&quot;].as_str(),&#10;               Some(&quot;your_package&quot;));&#10;&#10;    Ok(())&#10;}" description="Deserialize a TOML configuration file into toml::Value" toReformat="true" toShortenFQNames="true">
+    <context>
+      <option name="RUST_FILE" value="true" />
+    </context>
+  </template>
+  <template name="download-to-temp-directory" value="extern crate reqwest;&#10;extern crate tempdir;&#10;&#10;use std::io::copy;&#10;use std::fs::File;&#10;use tempdir::TempDir;&#10;&#10;fn run() -&gt; Result&lt;()&gt; {&#10;    // create a temp dir with prefix &quot;example&quot;&#10;    let tmp_dir = TempDir::new(&quot;example&quot;)?;&#10;    // make HTTP request for remote content&#10;    let target = &quot;https://www.rust-lang.org/logos/rust-logo-512x512.png&quot;;&#10;    let mut response = reqwest::get(target)?;&#10;&#10;    let mut dest = {&#10;        // extract target filename from URL&#10;        let fname = response&#10;            .url()&#10;            .path_segments()&#10;            .and_then(|segments| segments.last())&#10;            .and_then(|name| if name.is_empty() { None } else { Some(name) })&#10;            .unwrap_or(&quot;tmp.bin&quot;);&#10;&#10;        println!(&quot;file to download: '{}'&quot;, fname);&#10;        let fname = tmp_dir.path().join(fname);&#10;        println!(&quot;will be located under: '{:?}'&quot;, fname);&#10;        // create file with given name inside the temp dir&#10;        File::create(fname)?&#10;    };&#10;    // data is copied into the target file&#10;    copy(&amp;mut response, &amp;mut dest)?;&#10;    // tmp_dir is implicitly removed&#10;    Ok(())&#10;}" description="Download a file to a temporary directory" toReformat="true" toShortenFQNames="true">
+    <context>
+      <option name="RUST_FILE" value="true" />
+    </context>
+  </template>
+  <template name="draw-fractal" value="extern crate threadpool;&#10;extern crate num;&#10;extern crate num_cpus;&#10;extern crate image;&#10;&#10;use std::sync::mpsc::{channel, RecvError};&#10;use threadpool::ThreadPool;&#10;use num::complex::Complex;&#10;use image::{ImageBuffer, Pixel, Rgb};&#10;&#10;fn run() -&gt; Result&lt;()&gt; {&#10;    let (width, height) = (1920, 1080);&#10;    let mut img = ImageBuffer::new(width, height);&#10;    let iterations = 300;&#10;&#10;    // constants to tweak for appearance&#10;    let c = Complex::new(-0.8, 0.156);&#10;&#10;    let pool = ThreadPool::new(num_cpus::get());&#10;    let (tx, rx) = channel();&#10;&#10;    for y in 0..height {&#10;        let tx = tx.clone();&#10;        pool.execute(move || for x in 0..width {&#10;                         let i = julia(c, x, y, width, height, iterations);&#10;                         let pixel = wavelength_to_rgb(380 + i * 400 / iterations);&#10;                         tx.send((x, y, pixel)).expect(&quot;Could not send data!&quot;);&#10;                     });&#10;    }&#10;&#10;    for _ in 0..(width * height) {&#10;        let (x, y, pixel) = rx.recv()?;&#10;        img.put_pixel(x, y, pixel);&#10;    }&#10;    let _ = img.save(&quot;output.png&quot;)?;&#10;    Ok(())&#10;}" description="Draw fractal dispatching work to a thread pool" toReformat="true" toShortenFQNames="true">
+    <context>
+      <option name="RUST_FILE" value="true" />
+    </context>
+  </template>
+  <template name="extract-all-links" value="extern crate reqwest;&#10;extern crate select;&#10;&#10;use select::document::Document;&#10;use select::predicate::Name;&#10;&#10;fn run() -&gt; Result&lt;()&gt; {&#10;    let res = reqwest::get(&quot;https://www.rust-lang.org/en-US/&quot;)?;&#10;&#10;    let document = Document::from_read(res)?;&#10;&#10;    let links = document.find(Name(&quot;a&quot;))&#10;        .filter_map(|n| n.attr(&quot;href&quot;));&#10;&#10;    for link in links {&#10;        println!(&quot;{}&quot;, link);&#10;    }&#10;&#10;    Ok(())&#10;}" description="Extract all links from a webpage" toReformat="true" toShortenFQNames="true">
+    <context>
+      <option name="RUST_FILE" value="true" />
+    </context>
+  </template>
+  <template name="extract-url-origin" value="extern crate url;&#10;&#10;use url::{Url, Origin, Host};&#10;&#10;fn run() -&gt; Result&lt;()&gt; {&#10;    let s = &quot;ftp://rust-lang.org/examples&quot;;&#10;&#10;    let url = Url::parse(s)?;&#10;&#10;    let expected_scheme = &quot;ftp&quot;.to_owned();&#10;    let expected_host = Host::Domain(&quot;rust-lang.org&quot;.to_owned());&#10;    let expected_port = 21;&#10;    let expected = Origin::Tuple(expected_scheme, expected_host, expected_port);&#10;&#10;    let origin = url.origin();&#10;    assert_eq!(origin, expected);&#10;    println!(&quot;The origin is as expected!&quot;);&#10;&#10;    Ok(())&#10;}" description="Extract the URL origin (scheme / host / port)" toReformat="true" toShortenFQNames="true">
+    <context>
+      <option name="RUST_FILE" value="true" />
+    </context>
+  </template>
+  <template name="file-size-recursive" value="extern crate walkdir;&#10;&#10;use walkdir::WalkDir;&#10;&#10;fn main() {&#10;    let total_size = WalkDir::new(&quot;.&quot;)&#10;        .min_depth(1)&#10;        .max_depth(3)&#10;        .into_iter()&#10;        .filter_map(|entry| entry.ok()) // Files, we have access to&#10;        .filter_map(|entry| entry.metadata().ok()) // Get metadata&#10;        .filter(|metadata| metadata.is_file()) // Filter out directories&#10;        .fold(0, |acc, m| acc + m.len()); // Accumulate sizes&#10;&#10;    println!(&quot;Total size: {} bytes.&quot;, total_size);&#10;}" description="Recursively calculate file sizes at given depth" toReformat="true" toShortenFQNames="true">
+    <context>
+      <option name="RUST_FILE" value="true" />
+    </context>
+  </template>
+  <template name="find-duplicate-files" value="extern crate walkdir;&#10;&#10;use std::collections::HashMap;&#10;use walkdir::WalkDir;&#10;&#10;fn main() {&#10;    // Counters indexed by filenames&#10;    let mut filenames = HashMap::new();&#10;&#10;    // List recusively all files in the current directory filtering out&#10;    // directories and files not accessible (permission denied)&#10;    for entry in WalkDir::new(&quot;.&quot;)&#10;            .into_iter()&#10;            .filter_map(Result::ok)&#10;            .filter(|e| !e.file_type().is_dir()) {&#10;        // Get entry's filename&#10;        let f_name = String::from(entry.file_name().to_string_lossy());&#10;        // Get or initialize the counter&#10;        let counter = filenames.entry(f_name.clone()).or_insert(0);&#10;        // Update the counter&#10;        *counter += 1;&#10;&#10;        if *counter == 2 {&#10;            println!(&quot;{}&quot;, f_name);&#10;        }&#10;    }&#10;}" description="Recursively find duplicate file names" toReformat="true" toShortenFQNames="true">
+    <context>
+      <option name="RUST_FILE" value="true" />
+    </context>
+  </template>
+  <template name="find-files-predicate" value="extern crate walkdir;&#10;&#10;use walkdir::WalkDir;&#10;&#10;fn run() -&gt; Result&lt;()&gt; {&#10;    // List recusively all accessible files in the current directory&#10;    for entry in WalkDir::new(&quot;.&quot;).into_iter().filter_map(|e| e.ok()) {&#10;        // Get entry's filename&#10;        let f_name = entry.file_name().to_string_lossy();&#10;        // Get entry's modified time&#10;        let sec = entry.metadata()?.modified()?;&#10;&#10;        // Print JSON files modified within the last day&#10;        if f_name.ends_with(&quot;.json&quot;) &amp;&amp; sec.elapsed()?.as_secs() &lt; 86400 {&#10;            println!(&quot;{}&quot;, f_name);&#10;        }&#10;    }&#10;&#10;    Ok(())&#10;}" description="Recursively find all files with given predicate" toReformat="true" toShortenFQNames="true">
+    <context>
+      <option name="RUST_FILE" value="true" />
+    </context>
+  </template>
+  <template name="global-mutable" value="#[macro_use]&#10;extern crate lazy_static;&#10;&#10;use std::sync::Mutex;&#10;&#10;lazy_static! {&#10;    static ref FRUIT: Mutex&lt;Vec&lt;String&gt;&gt; = Mutex::new(Vec::new());&#10;}&#10;&#10;fn insert(fruit: &amp;str) -&gt; Result&lt;()&gt; {&#10;    // acquire exclusive access&#10;    let mut db = FRUIT.lock().map_err(|_| &quot;Failed to acquire MutexGuard&quot;)?;&#10;    db.push(fruit.to_string());&#10;    Ok(())&#10;    // release exclusive access&#10;}&#10;&#10;fn run() -&gt; Result&lt;()&gt; {&#10;    insert(&quot;apple&quot;)?;&#10;    insert(&quot;orange&quot;)?;&#10;    insert(&quot;peach&quot;)?;&#10;    {&#10;        // acquire access&#10;        let db = FRUIT.lock().map_err(|_| &quot;Failed to acquire MutexGuard&quot;)?;&#10;&#10;        for (i, item) in db.iter().enumerate() {&#10;            println!(&quot;{}: {}&quot;, i, item);&#10;        }&#10;        // release access&#10;    }&#10;    insert(&quot;grape&quot;)?;&#10;    Ok(())&#10;}" description="Maintain global mutable state" toReformat="true" toShortenFQNames="true">
+    <context>
+      <option name="RUST_FILE" value="true" />
+    </context>
+  </template>
+  <template name="hex-encode" value="extern crate data_encoding;&#10;&#10;use data_encoding::{HEXUPPER, DecodeError};&#10;&#10;fn run() -&gt; Result&lt;()&gt; {&#10;    let original = b&quot;The quick brown fox jumps over the lazy dog.&quot;;&#10;    let expected = &quot;54686520717569636B2062726F776E20666F78206A756D7073206F76\&#10;        657220746865206C617A7920646F672E&quot;;&#10;&#10;    let encoded = HEXUPPER.encode(original);&#10;    assert_eq!(encoded, expected);&#10;&#10;    let decoded = HEXUPPER.decode(&amp;encoded.into_bytes())?;&#10;    assert_eq!(&amp;decoded[..], &amp;original[..]);&#10;&#10;    Ok(())&#10;}" description="Encode and decode hex" toReformat="true" toShortenFQNames="true">
+    <context>
+      <option name="RUST_FILE" value="true" />
+    </context>
+  </template>
+  <template name="http-get" value="extern crate reqwest;&#10;&#10;use std::io::Read;&#10;&#10;fn run() -&gt; Result&lt;()&gt; {&#10;    let mut res = reqwest::get(&quot;http://httpbin.org/get&quot;)?;&#10;    let mut body = String::new();&#10;    res.read_to_string(&amp;mut body)?;&#10;&#10;    println!(&quot;Status: {}&quot;, res.status());&#10;    println!(&quot;Headers:\n{}&quot;, res.headers());&#10;    println!(&quot;Body:\n{}&quot;, body);&#10;&#10;    Ok(())&#10;}" description="Make a HTTP GET request" toReformat="true" toShortenFQNames="true">
+    <context>
+      <option name="RUST_FILE" value="true" />
+    </context>
+  </template>
+  <template name="lazy-static" value="#[macro_use]&#10;extern crate lazy_static;&#10;&#10;use std::collections::HashMap;&#10;&#10;lazy_static! {&#10;    static ref PRIVILEGES: HashMap&lt;&amp;'static str, Vec&lt;&amp;'static str&gt;&gt; = {&#10;        let mut map = HashMap::new();&#10;        map.insert(&quot;James&quot;, vec![&quot;user&quot;, &quot;admin&quot;]);&#10;        map.insert(&quot;Jim&quot;, vec![&quot;user&quot;]);&#10;        map&#10;    };&#10;}&#10;&#10;fn show_access(name: &amp;str) {&#10;    let access = PRIVILEGES.get(name);&#10;    println!(&quot;{}: {:?}&quot;, name, access);&#10;}&#10;&#10;fn main() {&#10;    let access = PRIVILEGES.get(&quot;James&quot;);&#10;    println!(&quot;James: {:?}&quot;, access);&#10;&#10;    show_access(&quot;Jim&quot;);&#10;}" description="Declare lazily evaluated constant" toReformat="true" toShortenFQNames="true">
+    <context>
+      <option name="RUST_FILE" value="true" />
+    </context>
+  </template>
+  <template name="listen-on-free-port" value="use std::net::{SocketAddrV4, Ipv4Addr, TcpListener};&#10;use std::io::Read;&#10;&#10;fn run() -&gt; Result&lt;()&gt; {&#10;    let loopback = Ipv4Addr::new(127, 0, 0, 1);&#10;    // Assigning port 0 requests the OS to assign a free port&#10;    let socket = SocketAddrV4::new(loopback, 0);&#10;    let listener = TcpListener::bind(socket)?;&#10;    let port = listener.local_addr()?;&#10;    println!(&quot;Listening on {}, access this port to end the program&quot;, port);&#10;    let (mut tcp_stream, addr) = listener.accept()?; //block  until requested&#10;    println!(&quot;Connection received! {:?} is sending data.&quot;, addr);&#10;    let mut input = String::new();&#10;    // read from the socket until connection closed by client, discard byte count.&#10;    let _ = tcp_stream.read_to_string(&amp;mut input)?;&#10;    println!(&quot;{:?} says {}&quot;, addr, input);&#10;    Ok(())&#10;}" description="Listen on unused port TCP/IP" toReformat="true" toShortenFQNames="true">
+    <context>
+      <option name="RUST_FILE" value="true" />
+    </context>
+  </template>
+  <template name="little-endian" value="extern crate byteorder;&#10;&#10;use byteorder::{LittleEndian, ReadBytesExt, WriteBytesExt};&#10;&#10;#[derive(Default, PartialEq, Debug)]&#10;struct Payload {&#10;    kind: u8,&#10;    value: u16,&#10;}&#10;&#10;fn run() -&gt; Result&lt;()&gt; {&#10;    let original_payload = Payload::default();&#10;    let encoded_bytes = encode(&amp;original_payload)?;&#10;    let decoded_payload = decode(&amp;encoded_bytes)?;&#10;    assert_eq!(original_payload, decoded_payload);&#10;    Ok(())&#10;}&#10;&#10;fn encode(payload: &amp;Payload) -&gt; Result&lt;Vec&lt;u8&gt;&gt; {&#10;    let mut bytes = vec![];&#10;    bytes.write_u8(payload.kind)?;&#10;    bytes.write_u16::&lt;LittleEndian&gt;(payload.value)?;&#10;    Ok(bytes)&#10;}&#10;&#10;fn decode(mut bytes: &amp;[u8]) -&gt; Result&lt;Payload&gt; {&#10;    let payload = Payload {&#10;        kind: bytes.read_u8()?,&#10;        value: bytes.read_u16::&lt;LittleEndian&gt;()?,&#10;    };&#10;    Ok(payload)&#10;}" description="Read and write integers in little-endian byte order" toReformat="true" toShortenFQNames="true">
+    <context>
+      <option name="RUST_FILE" value="true" />
+    </context>
+  </template>
+  <template name="log-debug-console" value="#[macro_use]&#10;extern crate log;&#10;extern crate env_logger;&#10;&#10;fn execute_query(query: &amp;str) {&#10;    debug!(&quot;Executing query: {}&quot;, query);&#10;&#10;    // then do the thing&#10;}&#10;&#10;fn run() -&gt; Result&lt;()&gt; {&#10;    env_logger::init()?;&#10;&#10;    execute_query(&quot;DROP TABLE students&quot;);&#10;&#10;    Ok(())&#10;}" description="Log a debug message to the console" toReformat="true" toShortenFQNames="true">
+    <context>
+      <option name="RUST_FILE" value="true" />
+    </context>
+  </template>
+  <template name="log-error-console" value="#[macro_use]&#10;extern crate log;&#10;extern crate env_logger;&#10;&#10;fn execute_query(_query: &amp;str) -&gt; Result&lt;()&gt; {&#10;    // Do the thing, or maybe not&#10;&#10;    bail!(&quot;I'm afraid I can't do that&quot;)&#10;}&#10;&#10;fn run() -&gt; Result&lt;()&gt; {&#10;    env_logger::init()?;&#10;&#10;    let response = execute_query(&quot;DROP TABLE students&quot;);&#10;    if let Err(err) = response {&#10;        // Log the error message and continue&#10;        error!(&quot;Failed to execute query: {}&quot;, err);&#10;    }&#10;&#10;    Ok(())&#10;}" description="Log an error message to the console" toReformat="true" toShortenFQNames="true">
+    <context>
+      <option name="RUST_FILE" value="true" />
+    </context>
+  </template>
+  <template name="log-level-module" value="#[macro_use]&#10;extern crate log;&#10;extern crate env_logger;&#10;&#10;mod foo {&#10;    mod bar {&#10;        pub fn run() {&#10;            warn!(&quot;[bar] warn&quot;);&#10;            info!(&quot;[bar] info&quot;);&#10;            debug!(&quot;[bar] debug&quot;);&#10;        }&#10;    }&#10;&#10;    pub fn run() {&#10;        warn!(&quot;[foo] warn&quot;);&#10;        info!(&quot;[foo] info&quot;);&#10;        debug!(&quot;[foo] debug&quot;);&#10;        bar::run();&#10;    }&#10;}&#10;&#10;fn run() -&gt; Result&lt;()&gt; {&#10;    env_logger::init()?;&#10;    warn!(&quot;[root] warn&quot;);&#10;    info!(&quot;[root] info&quot;);&#10;    debug!(&quot;[root] debug&quot;);&#10;    foo::run();&#10;&#10;    Ok(())&#10;}" description="Enable log levels per module" toReformat="true" toShortenFQNames="true">
+    <context>
+      <option name="RUST_FILE" value="true" />
+    </context>
+  </template>
+  <template name="log-to-custom-location" value="#[macro_use]&#10;extern crate log;&#10;extern crate log4rs;&#10;&#10;use log::LogLevelFilter;&#10;use log4rs::append::file::FileAppender;&#10;use log4rs::encode::pattern::PatternEncoder;&#10;use log4rs::config::{Appender, Config, Root};&#10;&#10;fn run() -&gt; Result&lt;()&gt; {&#10;    let logfile = FileAppender::builder()&#10;        .encoder(Box::new(PatternEncoder::new(&quot;{l} - {m}\n&quot;)))&#10;        .build(&quot;log/output.log&quot;)?;&#10;&#10;    let config = Config::builder()&#10;        .appender(Appender::builder().build(&quot;logfile&quot;, Box::new(logfile)))&#10;        .build(Root::builder()&#10;                   .appender(&quot;logfile&quot;)&#10;                   .build(LogLevelFilter::Info))?;&#10;&#10;    log4rs::init_config(config)?;&#10;&#10;    info!(&quot;Hello, world!&quot;);&#10;&#10;    Ok(())&#10;}" description="Log messages to a custom location" toReformat="true" toShortenFQNames="true">
+    <context>
+      <option name="RUST_FILE" value="true" />
+    </context>
+  </template>
+  <template name="log-to-syslog" value="#[macro_use]&#10;extern crate log;&#10;extern crate syslog;&#10;&#10;use log::LogLevelFilter;&#10;use syslog::Facility;&#10;&#10;fn run() -&gt; Result&lt;()&gt; {&#10;    syslog::init(Facility::LOG_USER,&#10;                 LogLevelFilter::Debug,&#10;                 Some(&quot;My app name&quot;))?;&#10;    debug!(&quot;this is a debug {}&quot;, &quot;message&quot;);&#10;    error!(&quot;this is an error!&quot;);&#10;    Ok(())&#10;}" description="Log to the Unix syslog" toReformat="true" toShortenFQNames="true">
+    <context>
+      <option name="RUST_FILE" value="true" />
+    </context>
+  </template>
+  <template name="log-with-timestamp" value="#[macro_use]&#10;extern crate log;&#10;extern crate env_logger;&#10;extern crate chrono;&#10;&#10;use chrono::Local;&#10;use env_logger::LogBuilder;&#10;use std::env;&#10;&#10;fn run() -&gt; Result&lt;()&gt; {&#10;    LogBuilder::new()&#10;        .format(|record| {&#10;                    format!(&quot;{} [{}] - {}&quot;,&#10;                            Local::now().format(&quot;%Y-%m-%dT%H:%M:%S&quot;),&#10;                            record.level(),&#10;                            record.args())&#10;                })&#10;        .parse(&amp;env::var(&quot;MY_APP_LOG&quot;).unwrap_or_default())&#10;        .init()?;&#10;&#10;    warn!(&quot;warn&quot;);&#10;    info!(&quot;info&quot;);&#10;    debug!(&quot;debug&quot;);&#10;    Ok(())&#10;}" description="Include timestamp in log messages" toReformat="true" toShortenFQNames="true">
+    <context>
+      <option name="RUST_FILE" value="true" />
+    </context>
+  </template>
+  <template name="paginated-rest-client" value="#[macro_use]&#10;extern crate serde_derive;&#10;extern crate serde;&#10;extern crate reqwest;&#10;&#10;#[derive(Deserialize)]&#10;struct ApiResponse {&#10;    dependencies: Vec&lt;Dependency&gt;,&#10;    meta: Meta,&#10;}&#10;&#10;// Could capture more fields here if needed&#10;#[derive(Deserialize)]&#10;struct Dependency {&#10;    crate_id: String,&#10;}&#10;&#10;#[derive(Deserialize)]&#10;struct Meta {&#10;    total: u32,&#10;}&#10;&#10;struct ReverseDependencies {&#10;    crate_id: String,&#10;    dependencies: &lt;Vec&lt;Dependency&gt; as IntoIterator&gt;::IntoIter,&#10;    client: reqwest::Client,&#10;    page: u32,&#10;    per_page: u32,&#10;    total: u32,&#10;}&#10;&#10;impl ReverseDependencies {&#10;    fn of(crate_id: &amp;str) -&gt; Result&lt;Self&gt; {&#10;        Ok(ReverseDependencies {&#10;               crate_id: crate_id.to_owned(),&#10;               dependencies: vec![].into_iter(),&#10;               client: reqwest::Client::new()?,&#10;               page: 0,&#10;               per_page: 100,&#10;               total: 0,&#10;           })&#10;    }&#10;&#10;    fn try_next(&amp;mut self) -&gt; Result&lt;Option&lt;Dependency&gt;&gt; {&#10;        // If the previous page has a dependency that hasn't been looked at.&#10;        if let Some(dep) = self.dependencies.next() {&#10;            return Ok(Some(dep));&#10;        }&#10;&#10;        // If there are no more reverse dependencies.&#10;        if self.page &gt; 0 &amp;&amp; self.page * self.per_page &gt;= self.total {&#10;            return Ok(None);&#10;        }&#10;&#10;        // Fetch the next page.&#10;        self.page += 1;&#10;        let url = format!(&quot;https://crates.io/api/v1/crates/{}/reverse_dependencies?page={}&amp;per_page={}&quot;,&#10;                          self.crate_id,&#10;                          self.page,&#10;                          self.per_page);&#10;&#10;        let response = self.client.get(&amp;url).send()?.json::&lt;ApiResponse&gt;()?;&#10;        self.dependencies = response.dependencies.into_iter();&#10;        self.total = response.meta.total;&#10;        Ok(self.dependencies.next())&#10;    }&#10;}&#10;&#10;impl Iterator for ReverseDependencies {&#10;    type Item = Result&lt;Dependency&gt;;&#10;&#10;    fn next(&amp;mut self) -&gt; Option&lt;Self::Item&gt; {&#10;        // Some juggling required here because `try_next` returns a result&#10;        // containing an option, while `next` is supposed to return an option&#10;        // containing a result.&#10;        match self.try_next() {&#10;            Ok(Some(dep)) =&gt; Some(Ok(dep)),&#10;            Ok(None) =&gt; None,&#10;            Err(err) =&gt; Some(Err(err)),&#10;        }&#10;    }&#10;}" description="Consume a paginated RESTful API" toReformat="true" toShortenFQNames="true">
+    <context>
+      <option name="RUST_FILE" value="true" />
+    </context>
+  </template>
+  <template name="parallel-mut-array" value="extern crate rayon;&#10;&#10;use rayon::prelude::*;&#10;&#10;fn main() {&#10;    let mut arr = [0, 7, 9, 11];&#10;&#10;    arr.par_iter_mut().for_each(|p| *p -= 1);&#10;&#10;    println!(&quot;{:?}&quot;, arr);&#10;}" description="Mutate the elements of an array in parallel" toReformat="true" toShortenFQNames="true">
+    <context>
+      <option name="RUST_FILE" value="true" />
+    </context>
+  </template>
+  <template name="parse-cli-arguments" value="extern crate clap;&#10;&#10;use clap::{Arg, App};&#10;&#10;fn main() {&#10;    // Define command line arguments.&#10;    let matches = App::new(&quot;My Test Program&quot;)&#10;        .version(&quot;0.1.0&quot;)&#10;        .author(&quot;Hackerman Jones &lt;hckrmnjones@hack.gov&gt;&quot;)&#10;        .about(&quot;Teaches argument parsing&quot;)&#10;        .arg(Arg::with_name(&quot;file&quot;)&#10;                 .short(&quot;f&quot;)&#10;                 .long(&quot;file&quot;)&#10;                 .takes_value(true)&#10;                 .help(&quot;A cool file&quot;))&#10;        .arg(Arg::with_name(&quot;num&quot;)&#10;                 .short(&quot;n&quot;)&#10;                 .long(&quot;number&quot;)&#10;                 .takes_value(true)&#10;                 .help(&quot;Five less than your favorite number&quot;))&#10;        .get_matches();&#10;&#10;    // Get value for file, or default to 'input.txt'.&#10;    let myfile = matches.value_of(&quot;file&quot;).unwrap_or(&quot;input.txt&quot;);&#10;    println!(&quot;The file passed is: {}&quot;, myfile);&#10;&#10;    // Get value for num if present, and try parsing it as i32.&#10;    let num_str = matches.value_of(&quot;num&quot;);&#10;    match num_str {&#10;        None =&gt; println!(&quot;No idea what your favorite number is.&quot;),&#10;        Some(s) =&gt; {&#10;            match s.parse::&lt;i32&gt;() {&#10;                Ok(n) =&gt; println!(&quot;Your favorite number must be {}.&quot;, n + 5),&#10;                Err(_) =&gt; println!(&quot;That's not a number! {}&quot;, s),&#10;            }&#10;        }&#10;    }&#10;}" description="Parse command line arguments" toReformat="true" toShortenFQNames="true">
+    <context>
+      <option name="RUST_FILE" value="true" />
+    </context>
+  </template>
+  <template name="parse-url" value="extern crate url;&#10;&#10;use url::Url;&#10;&#10;fn run() -&gt; Result&lt;()&gt; {&#10;    let s = &quot;https://github.com/rust-lang/rust/issues?labels=E-easy&amp;state=open&quot;;&#10;&#10;    let parsed = Url::parse(s)?;&#10;    println!(&quot;The path part of the URL is: {}&quot;, parsed.path());&#10;&#10;    Ok(())&#10;}" description="Parse a URL from a string to a Url type" toReformat="true" toShortenFQNames="true">
+    <context>
+      <option name="RUST_FILE" value="true" />
+    </context>
+  </template>
+  <template name="percent-encode" value="extern crate url;&#10;&#10;use url::percent_encoding::{utf8_percent_encode, percent_decode, DEFAULT_ENCODE_SET};&#10;&#10;fn run() -&gt; Result&lt;()&gt; {&#10;    let input = &quot;$VAR1$&quot;;&#10;&#10;    let iter = utf8_percent_encode(input, DEFAULT_ENCODE_SET);&#10;    let encoded: String = iter.collect();&#10;    let iter = percent_decode(encoded.as_bytes());&#10;    let decoded = iter.decode_utf8()?;&#10;    assert_eq!(decoded, &quot;$VAR1$&quot;);&#10;    Ok(())&#10;}" description="Percent-encode a string" toReformat="true" toShortenFQNames="true">
+    <variable name="VAR1" expression="" defaultValue="&quot;Input&quot;" alwaysStopAt="true" />
+    <context>
+      <option name="RUST_FILE" value="true" />
+    </context>
+  </template>
+  <template name="post-to-paste-rs" value="extern crate reqwest;&#10;&#10;use std::fs::File;&#10;use std::io::Read;&#10;use reqwest::Client;&#10;&#10;fn run() -&gt; Result&lt;()&gt; {&#10;    let paste_api = &quot;https://paste.rs&quot;;&#10;    let file = File::open(&quot;message&quot;)?;&#10;    let client = Client::new()?;&#10;&#10;    // blocks until paste.rs returns a response&#10;    let mut response = client.post(paste_api).body(file).send()?;&#10;    let mut response_body = String::new();&#10;    response.read_to_string(&amp;mut response_body)?;&#10;    println!(&quot;Your paste is located at: {}&quot;, response_body);&#10;    Ok(())&#10;}" description="POST a file to paste-rs." toReformat="true" toShortenFQNames="true">
+    <context>
+      <option name="RUST_FILE" value="true" />
+    </context>
+  </template>
+  <template name="query-github" value="#[macro_use]&#10;extern crate serde_derive;&#10;extern crate reqwest;&#10;&#10;#[derive(Deserialize, Debug)]&#10;struct User {&#10;    login: String,&#10;    id: u32,&#10;    // remaining fields not deserialized for brevity&#10;}&#10;&#10;fn run() -&gt; Result&lt;()&gt; {&#10;    let request_url = format!(&quot;https://api.github.com/repos/{owner}/{repo}/stargazers&quot;,&#10;                              owner = &quot;brson&quot;,&#10;                              repo = &quot;rust-cookbook&quot;);&#10;    println!(&quot;{}&quot;, request_url);&#10;    let mut response = reqwest::get(&amp;request_url)?;&#10;&#10;    let users: Vec&lt;User&gt; = response.json()?;&#10;    println!(&quot;{:?}&quot;, users);&#10;    Ok(())&#10;}" description="Query the GitHub API" toReformat="true" toShortenFQNames="true">
+    <context>
+      <option name="RUST_FILE" value="true" />
+    </context>
+  </template>
+  <template name="random-access-file" value="extern crate memmap;&#10;&#10;use memmap::{Mmap, Protection};&#10;&#10;fn run() -&gt; Result&lt;()&gt; {&#10;    let map = Mmap::open_path(&quot;content.txt&quot;, Protection::Read)?;&#10;    let random_indexes = [0, 1, 2, 19, 22, 10, 11, 29];&#10;    // This is only safe if no other code is modifying the file at the same time&#10;    unsafe {&#10;        let map = map.as_slice();&#10;        assert_eq!(&amp;map[3..13], b&quot;hovercraft&quot;);&#10;        // I'm using an iterator here to change indexes to bytes&#10;        let random_bytes: Vec&lt;u8&gt; = random_indexes.iter()&#10;            .map(|&amp;idx| map[idx])&#10;            .collect();&#10;        assert_eq!(&amp;random_bytes[..], b&quot;My loaf!&quot;);&#10;    }&#10;    Ok(())&#10;}" description="Access a file randomly using a memory map" toReformat="true" toShortenFQNames="true">
+    <context>
+      <option name="RUST_FILE" value="true" />
+    </context>
+  </template>
+  <template name="random-custom-type" value="extern crate rand;&#10;use rand::{Rng, Rand};&#10;&#10;#[derive(Debug)]&#10;struct Point {&#10;    x: i32,&#10;    y: i32,&#10;}&#10;&#10;impl Rand for Point {&#10;    fn rand&lt;R: Rng&gt;(rng: &amp;mut R) -&gt; Point {&#10;        let (rand_x, rand_y) = rng.gen();&#10;        Point {&#10;            x: rand_x,&#10;            y: rand_y,&#10;        }&#10;    }&#10;}&#10;&#10;fn main() {&#10;    let mut rng = rand::thread_rng();&#10;    let rand_tuple = rng.gen::&lt;(i32, bool, f64)&gt;();&#10;    let rand_point: Point = rng.gen();&#10;    println!(&quot;Random tuple: {:?}&quot;, rand_tuple);&#10;    println!(&quot;Random Point: {:?}&quot;, rand_point);&#10;}" description="Generate random values of a custom type" toReformat="true" toShortenFQNames="true">
+    <context>
+      <option name="RUST_FILE" value="true" />
+    </context>
+  </template>
+  <template name="random-float" value="extern crate rand;&#10;use rand::Rng;&#10;&#10;fn main() {&#10;    let mut rng = rand::thread_rng();&#10;    println!(&quot;Random f64: {}&quot;, rng.gen::&lt;f64&gt;());&#10;}" description="Generate random floating point numbers" toReformat="true" toShortenFQNames="true">
+    <context>
+      <option name="RUST_FILE" value="true" />
+    </context>
+  </template>
+  <template name="random-normal-distribution" value="extern crate rand;&#10;&#10;use rand::distributions::{Normal, IndependentSample};&#10;&#10;fn main() {&#10;    let normal = Normal::new($VAR1$, $VAR2$);&#10;    let mut rng = rand::thread_rng();&#10;    let v = normal.ind_sample(&amp;mut rng);&#10;    println!(&quot;{} is from a N($VAR1$, $VAR2$) distribution&quot;, v)&#10;}" description="Generate random numbers with normal distribution" toReformat="true" toShortenFQNames="true">
+    <variable name="VAR1" expression="" defaultValue="&quot;Mean&quot;" alwaysStopAt="true" />
+    <variable name="VAR2" expression="" defaultValue="&quot;Standart Deviation&quot;" alwaysStopAt="true" />
+    <context>
+      <option name="RUST_FILE" value="true" />
+    </context>
+  </template>
+  <template name="random-range" value="extern crate rand;&#10;&#10;use rand::Rng;&#10;&#10;fn main() {&#10;    let mut rng = rand::thread_rng();&#10;    println!(&quot;{}&quot;, rng.gen_range($VAR1$, $VAR2$));&#10;}" description="Generate random numbers within a range" toReformat="true" toShortenFQNames="true">
+    <variable name="VAR1" expression="" defaultValue="&quot;Range Begin&quot;" alwaysStopAt="true" />
+    <variable name="VAR2" expression="" defaultValue="&quot;Range End&quot;" alwaysStopAt="true" />
+    <context>
+      <option name="RUST_FILE" value="true" />
+    </context>
+  </template>
+  <template name="read-line" value="use std::fs::File;&#10;use std::io::{Write, BufReader, BufRead};&#10;&#10;fn run() -&gt; Result&lt;()&gt; {&#10;    let path = &quot;$VAR1$&quot;;&#10;&#10;    let mut output = File::create(path)?;&#10;    write!(output, &quot;$VAR2$&quot;)?;&#10;&#10;    let input = File::open(path)?;&#10;    let buffered = BufReader::new(input);&#10;&#10;    for line in buffered.lines() {&#10;        println!(&quot;{}&quot;, line?);&#10;    }&#10;&#10;    Ok(())&#10;}" description="Read lines of strings from a file" toReformat="true" toShortenFQNames="true">
+    <variable name="VAR1" expression="" defaultValue="&quot;File Path&quot;" alwaysStopAt="true" />
+    <variable name="VAR2" expression="" defaultValue="&quot;What to Write&quot;" alwaysStopAt="true" />
+    <context>
+      <option name="RUST_FILE" value="true" />
+    </context>
+  </template>
+  <template name="remove-url-fragments" value="extern crate url;&#10;&#10;use url::{Url, Position};&#10;&#10;fn run() -&gt; Result&lt;()&gt; {&#10;    let parsed = Url::parse(&quot;https://github.com/rust-lang/rust/issues?labels=E-easy&amp;state=open&quot;)?;&#10;    let cleaned: &amp;str = &amp;parsed[..Position::AfterPath];&#10;    println!(&quot;cleaned: {}&quot;, cleaned);&#10;    Ok(())&#10;}" description="Remove fragment identifiers and query pairs from a URL" toReformat="true" toShortenFQNames="true">
+    <context>
+      <option name="RUST_FILE" value="true" />
+    </context>
+  </template>
+  <template name="rest-custom-header" value="extern crate url;&#10;extern crate reqwest;&#10;#[macro_use]&#10;extern crate hyper;&#10;#[macro_use]&#10;extern crate serde_derive;&#10;&#10;use std::collections::HashMap;&#10;use url::Url;&#10;use reqwest::header::{UserAgent, Authorization, Bearer};&#10;&#10;// Custom header type&#10;header! { (XPoweredBy, &quot;X-Powered-By&quot;) =&gt; [String] }&#10;&#10;// Helper for verification&#10;#[derive(Deserialize, Debug)]&#10;pub struct HeadersEcho {&#10;    pub headers: HashMap&lt;String, String&gt;,&#10;}&#10;&#10;fn run() -&gt; Result&lt;()&gt; {&#10;    let client = reqwest::Client::new()?;&#10;&#10;    // Make request to webservice that will respond with JSON dict containing&#10;    // the headders set on HTTP GET request.&#10;    let url = Url::parse_with_params(&quot;http://httpbin.org/headers&quot;,&#10;                                     &amp;[(&quot;lang&quot;, &quot;rust&quot;), (&quot;browser&quot;, &quot;servo&quot;)])?;&#10;&#10;    let mut response = client&#10;        .get(url)&#10;        .header(UserAgent(&quot;Rust-test&quot;.to_owned()))&#10;        .header(Authorization(Bearer { token: &quot;DEadBEEfc001cAFeEDEcafBAd&quot;.to_owned() }))&#10;        .header(XPoweredBy(&quot;Guybrush Threepwood&quot;.to_owned()))&#10;        .send()?;&#10;&#10;    // JSON response should match the headers set on request&#10;    let out: HeadersEcho = response.json()?;&#10;    assert_eq!(out.headers[&quot;Authorization&quot;],&#10;               &quot;Bearer DEadBEEfc001cAFeEDEcafBAd&quot;);&#10;    assert_eq!(out.headers[&quot;User-Agent&quot;], &quot;Rust-test&quot;);&#10;    assert_eq!(out.headers[&quot;X-Powered-By&quot;], &quot;Guybrush Threepwood&quot;);&#10;    // Response contains full URL used to make the request&#10;    assert_eq!(response.url().as_str(),&#10;               &quot;http://httpbin.org/headers?lang=rust&amp;browser=servo&quot;);&#10;&#10;    println!(&quot;{:?}&quot;, out);&#10;    Ok(())&#10;}" description="Set custom headers and URL parameters for a REST request" toReformat="true" toShortenFQNames="true">
+    <context>
+      <option name="RUST_FILE" value="true" />
+    </context>
+  </template>
+  <template name="run-external-process" value="extern crate regex;&#10;&#10;use std::process::Command;&#10;use regex::Regex;&#10;&#10;#[derive(PartialEq, Default, Clone, Debug)]&#10;struct Commit {&#10;    hash: String,&#10;    message: String,&#10;}&#10;&#10;fn run() -&gt; Result&lt;()&gt; {&#10;    let output = Command::new(&quot;git&quot;).arg(&quot;log&quot;).arg(&quot;--oneline&quot;).output()?;&#10;&#10;    if !output.status.success() {&#10;        bail!(&quot;Command executed with failing error code&quot;);&#10;    }&#10;&#10;    let pattern = Regex::new(r&quot;(?x)&#10;                               ([0-9a-fA-F]+) # commit hash&#10;                               (.*)           # The commit message&quot;)?;&#10;&#10;    let stdout = String::from_utf8(output.stdout)?;&#10;    let commits = stdout&#10;        .lines()&#10;        .filter_map(|line| pattern.captures(line))&#10;        .map(|cap| {&#10;                 Commit {&#10;                     hash: cap[1].to_string(),&#10;                     message: cap[2].trim().to_string(),&#10;                 }&#10;             })&#10;        .take(5);&#10;&#10;    for commit in commits {&#10;        println!(&quot;{:?}&quot;, commit);&#10;    }&#10;&#10;    Ok(())&#10;}" description="Run an external command and process stdout" toReformat="true" toShortenFQNames="true">
+    <context>
+      <option name="RUST_FILE" value="true" />
+    </context>
+  </template>
+  <template name="spawn-thread" value="extern crate crossbeam;&#10;&#10;use std::cmp;&#10;&#10;fn main() {&#10;    let arr = &amp;[-4, 1, 10, 25];&#10;    let max = find_max(arr, 0, arr.len());&#10;    assert_eq!(25, max);&#10;}&#10;&#10;fn find_max(arr: &amp;[i32], start: usize, end: usize) -&gt; i32 {&#10;    // Perform sequential computation if there are only a few elements.&#10;    const THRESHOLD: usize = 2;&#10;    if end - start &lt;= THRESHOLD {&#10;        return *arr.iter().max().unwrap();&#10;    }&#10;&#10;    let mid = start + (end - start) / 2;&#10;    crossbeam::scope(|scope| {&#10;        let left = scope.spawn(|| find_max(arr, start, mid));&#10;        let right = scope.spawn(|| find_max(arr, mid, end));&#10;&#10;        cmp::max(left.join(), right.join())&#10;    })&#10;}" description="Spawn a short-lived thread" toReformat="true" toShortenFQNames="true">
+    <context>
+      <option name="RUST_FILE" value="true" />
+    </context>
+  </template>
+  <template name="url-encode" value="extern crate url;&#10;use url::form_urlencoded::{byte_serialize, parse};&#10;&#10;fn main() {&#10;    let urlencoded: String = byte_serialize(&quot;What is ❤?&quot;.as_bytes()).collect();&#10;    assert_eq!(urlencoded, &quot;What+is+%E2%9D%A4%3F&quot;);&#10;    println!(&quot;urlencoded:'{}'&quot;, urlencoded);&#10;&#10;    let decoded: String = parse(urlencoded.as_bytes())&#10;        .map(|(key, val)| [key, val].concat())&#10;        .collect();&#10;    assert_eq!(decoded, &quot;What is ❤?&quot;);&#10;    println!(&quot;decoded:'{}'&quot;, decoded);&#10;}" description="Encode a string as application/x-www-form-urlencoded" toReformat="true" toShortenFQNames="true">
+    <context>
+      <option name="RUST_FILE" value="true" />
+    </context>
+  </template>
+</templateSet>
